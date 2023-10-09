@@ -1,17 +1,17 @@
 import sys
-from prefix import InvalidInputError, input_string, check, to_infix
-
+from prefix import check, to_infix
 
 print("\n\n  Добро пожаловать, здесь вы можете перевести входную строку \
 префиксной нотации в инфиксную запись. \
 \n\tВы можете вводить только бинарные операторы: +  -  *  / \n \
 \tВ качестве операндов беззнаковые числа. Разделитель - пробел\n\n")
 
-input_str = input_string("Введите строку: ")
+input_str = str(input("Введите строку: ")).split(" ")
+print(input_str)
 
 try:
     check(input_str)
-except InvalidInputError as e:
+except ValueError as e:
     print(e)
     sys.exit()
 
