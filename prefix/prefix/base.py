@@ -1,5 +1,3 @@
-import sys
-
 class InvalidInputError(Exception):
     pass
 
@@ -21,9 +19,9 @@ def check(arr):
             count_number += 1
     c = count_number - count_symbol
     if c > 1:
-        raise InvalidInputError("Операторов меньше на {}".format(c+1))
-    elif c < 1:
         raise InvalidInputError("Операторов больше на: {}".format(c+1))
+    elif c < 1:
+        raise InvalidInputError("Операторов меньше на: {}".format(c+1))
 
     return
 
@@ -40,21 +38,3 @@ def to_infix(arr):
     if len(stack) != 1:
         raise InvalidInputError("Ошибка при обработке выражения")
     return stack[0]
-
-
-print("\n\n  Добро пожаловать, здесь вы можете перевести входную строку \
-префиксной нотации в инфиксную запись. \
-\n\tВы можете вводить только бинарные операторы: +  -  *  / \n \
-\tВ качестве операндов беззнаковые числа. Разделитель - пробел\n\n")
-
-input_str = input_string("Введите строку: ")
-
-try:
-    check(input_str)
-except InvalidInputError as e:
-    print(e)
-    sys.exit()
-
-res = to_infix(input_str)
-
-print("Result: ", res)
