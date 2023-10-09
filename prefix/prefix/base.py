@@ -26,6 +26,4 @@ def to_infix(arr):
             operand2 = stack.pop()
             res = f"({operand1} {x} {operand2})"
             stack.append(res)
-    if len(stack) != 1:
-        raise ValueError("Ошибка при обработке выражения")
     return stack[0]
