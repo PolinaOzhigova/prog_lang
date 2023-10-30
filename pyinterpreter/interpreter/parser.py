@@ -8,7 +8,7 @@ class Parser:
         self._lexer = Lexer()
     
     def check_token(self, type_: TokenType):
-        if self._current_token.type_ == type_:
+        if self._current_token and self._current_token.type_ == type_:
             self._current_token = self._lexer.next()
         else:
             raise SyntaxError("invalid token order")

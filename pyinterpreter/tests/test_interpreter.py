@@ -61,6 +61,9 @@ class TestInterpreter:
     def test_priority(self, interpreter):
         assert interpreter.eval("2+2*2") == 6
     
+    def test_expr(self, interpreter):
+        assert interpreter.eval("2+3*4/5") == 14.0
+    
     def test_interpreter_visit_error(self, interpreter):
         with pytest.raises(ValueError):
             assert interpreter.visit("S")
@@ -97,3 +100,7 @@ class TestInterpreter:
     def test_invalid_factor(self, parser):
         with pytest.raises(SyntaxError):
             parser.factor()
+    
+    def test_incorrect_token_order(self, parser):
+        with pytest.raises(SyntaxError):
+            parser.check_token(TokenType.NUMBER)
