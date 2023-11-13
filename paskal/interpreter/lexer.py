@@ -32,25 +32,73 @@ class Lexer():
             result.append(self._current_char)
             self.forward()
         return "".join(result)
+    
+    def is_assignment(self):
+        self.forward()
+        if self._current_char.isspace():
+            self.skip()
+        if self._current_char == '=':
+            self.forward()
+            return True
+        return False
+    
+    def variable(self):
+        res  = []
+        f = False
+        while (self._current_char is not None and 
+               (self._current_char.isalpha() or self._current_char == "_" or self._current_char.isdigit())):
 
-    def next(self):
+            if self._current_char.isalpha() and not(f):
+                f = True
+            res.append(self._current_char)
+            self.forward()
+
+        return "".join(res), f
+
+    def next(self): 
         while self._current_char:
             if self._current_char.isspace():
                 self.skip()
                 continue
-            if self._current_char.isdigit():
-                return Token(TokenType.NUMBER, self.number())
-            if self._current_char in ["+", "-", "/", "*"]:
+            elif self._current_char.isdigit():
+                num = self.number()
+                if self._current_char is None or \
+                    (self._current_char != '_' and not(self._current_char.isalpha())):
+                    return Token(TokenType.NUMBER, num)
+            elif self._current_char in ["+", "-", "/", "*"]:
                 op = self._current_char
                 self.forward()
                 return Token(TokenType.OPERATOR, op)
-            if self._current_char == "(":
+            elif self._current_char == "(":
                 op = self._current_char
                 self.forward()
                 return Token(TokenType.LPAREN, op)
-            if self._current_char == ")":
+            elif self._current_char == ")":
                 op = self._current_char
                 self.forward()
                 return Token(TokenType.RPAREN, op)
+            elif self._current_char == ":":
+                if self.is_assignment():
+                    return Token(TokenType.ASSIGN, ":=")
+            elif self._current_char == ";":
+                semi = self._current_char
+                self.forward()
+                return Token(TokenType.SEMICOLON, semi)
+            elif self._current_char == ".":
+                return Token(TokenType.DOT, self._current_char)
+            elif self._current_char == "B":
+                begin = ['B', 'E', 'G', 'I', 'N']
+                while self._current_char and self._current_char in begin:
+                    self.forward()
+                return Token(TokenType.BEGIN, "BEGIN")
+            elif self._current_char == "E":
+                begin = ['E', 'N', 'D']
+                while self._current_char and self._current_char in begin:
+                    self.forward()
+                return Token(TokenType.END, "END")
+            elif self._current_char.isalpha() or self._current_char == '_':
+                var, correct_var = self.variable()
+                if correct_var:
+                    return Token(TokenType.ID, var)
             
             raise SyntaxError("bad token")

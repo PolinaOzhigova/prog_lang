@@ -1,87 +1,25 @@
 import pytest
-from interpreter import Interpreter
-from interpreter.ast import Number, BinOp, UnaryOp
-from interpreter.interpreter import NodeVisitor
-from interpreter.parser import Parser
-from interpreter.token import Token, TokenType
+from interpreter import Interpreter, NodeVisitor, Token, TokenType, Parser
+from interpreter import Number, BinOp, UnOp, Variable, Assignment, Empty, Semicolon
 
 
 @pytest.fixture(scope="function")
 def interpreter():
     return Interpreter()
 
-@pytest.fixture(scope="function")
-def parser():
-    return Parser()
-
 class TestInterpreter:
     interpreter = Interpreter()
 
-    def test_add(self, interpreter):
-        assert interpreter.eval("2+2") == 4
-    
-    def test_sub(self, interpreter):
-        assert interpreter.eval("2-2") == 0
+    def test_first(self, interpreter):
+        assert interpreter.eval("BEGIN END.") == {}
 
-    def test_add_with_letter(self, interpreter):
-        with pytest.raises(SyntaxError):
-            interpreter.eval("2+a")
-        with pytest.raises(SyntaxError):
-            interpreter.eval("t+2")
+    def test_second(self, interpreter):
+        assert interpreter.eval("BEGIN x:= 2 + 3 * (2 + 3); y:= 2 / 2 - 2 + 3 * ((1 + 1) + (1 + 1)); END.") == {'x': 17.0, 'y': 11.0}
 
-    def test_wrong_operator(self, interpreter):
-        with pytest.raises(SyntaxError):
-            interpreter.eval("2&3")
-
-    @pytest.mark.parametrize(
-            "interpreter, code", [(interpreter, "2 + 2"),
-                                  (interpreter, "2 +2 "),
-                                  (interpreter, " 2+2")]
-    )
-    def test_add_spaces(self, interpreter, code):
-        assert interpreter.eval(code) == 4
-
-    @pytest.mark.parametrize(
-            "interpreter, code", [(interpreter, "2 +++++++2"),
-                                  (interpreter, "2--2 "),
-                                  (interpreter, "----2+2")]
-    )
-    def test_unary_operator(self, interpreter, code):
-        assert interpreter.eval(code) == 4
-
-    def test_unary2(self, interpreter):
-        assert interpreter.eval("-(2+2)") == -4
-
-    def test_multyply(self, interpreter):
-        assert interpreter.eval("2*2") == 4
-
-    def test_div(self, interpreter):
-        assert interpreter.eval("2/2") == 1
-
-    def test_priority(self, interpreter):
-        assert interpreter.eval("2+2*2") == 6
-    
-    def test_expr(self, interpreter):
-        assert interpreter.eval("2+3*4/5") == 14.0
-    
-    def test_interpreter_visit_error(self, interpreter):
-        with pytest.raises(ValueError):
-            assert interpreter.visit("S")
-
-    def test_nodevisitor(self):
-        assert NodeVisitor().visit() == None
-
-    def test_wrong_unary_operator(self, interpreter):
-        with pytest.raises(ValueError):
-            interpreter.eval("*2")
-
-    def test_visit_binop(self, interpreter):
-        with pytest.raises(ValueError):
-            interpreter.visit_binop(BinOp(Number(Token(TokenType.NUMBER, 2)), Token(TokenType.OPERATOR, "^"), Number(Token(TokenType.NUMBER, 3))))
-
-    def test_visit_unaryop(self, interpreter):
-        with pytest.raises(ValueError):
-            assert interpreter.visit(UnaryOp(Token(TokenType.OPERATOR, "S"), Number(1)))
+    def test_third(self, interpreter):
+        assert interpreter.eval(
+            "BEGIN y: = 2; BEGIN a := 3; a := a; b := -10 ++ a + 10 * y / 4; c := a - b END; x := 11; END."
+            ) == {'y': 2.0, 'a': 3.0, 'b': -2.0, 'c': 5.0, 'x': 11.0}
 
     def test_number_str(self):
         assert Number(Token(TokenType.NUMBER, "2")).__str__() == f"Number (Token(TokenType.NUMBER, 2))"
@@ -91,16 +29,47 @@ class TestInterpreter:
                 f"BinOp+ (Number (Token(TokenType.NUMBER, 2)), Number (Token(TokenType.NUMBER, 3)))")
         
     def test_unop_str(self):
-        assert str(UnaryOp(Token(TokenType.OPERATOR, "-"), Number(1))) == "UnaryOp- (Number (1))"
-    
-    def test_interpreter_invalid_factor(self, interpreter):
-        with pytest.raises(SyntaxError):
-            interpreter.eval("5+()")
+        assert UnOp(Token(TokenType.OPERATOR, "-"), Number(Token(TokenType.NUMBER, 3))).__str__() == f"UnOp (-Number (Token(TokenType.NUMBER, 3)))"
 
-    def test_invalid_factor(self, parser):
-        with pytest.raises(SyntaxError):
-            parser.factor()
+    def test_variable_str(self):
+        assert Variable(Token(TokenType.ID, "x")).__str__() == f"Var (Token(TokenType.ID, x))"
+
+    def test_assignment_str(self):
+        assert Assignment(Variable(Token(TokenType.ID, "x")), Token(TokenType.NUMBER, "3")).__str__() == "Assignment (Var (Token(TokenType.ID, x)) = Token(TokenType.NUMBER, 3))"
     
-    def test_incorrect_token_order(self, parser):
+    def test_empty_str(self):
+        assert Empty().__str__() == "Empty ()"
+
+    def test_semicolon_str(self):
+        assert Semicolon(Token(TokenType.NUMBER, "3"), Token(TokenType.NUMBER, "4")).__str__() == "Semicolon (Token(TokenType.NUMBER, 3), Token(TokenType.NUMBER, 4))"
+
+    def test_nodevisitor(self):
+        assert NodeVisitor().visit() == None
+
+    def test_invalid_token_order(self, interpreter):
         with pytest.raises(SyntaxError):
-            parser.check_token(TokenType.NUMBER)
+            interpreter.eval("x")
+
+    def test_bad_token(self, interpreter):
+        with pytest.raises(SyntaxError):
+            interpreter.eval("BEGIN a : 3")
+
+    def test_invalid_factor(self):
+        with pytest.raises(SyntaxError):
+            Parser().factor()
+    
+    def test_invalid_statement(self):
+        with pytest.raises(SyntaxError):
+            Parser().statement()
+
+    def test_uninitialized_variable(self, interpreter):
+        with pytest.raises(ValueError):
+            interpreter.eval("BEGIN a := b END.")
+    
+    def test_invalid_unary_operator(self, interpreter):
+        with pytest.raises(ValueError):
+            interpreter.visit_unop(UnOp(Token(TokenType.OPERATOR, "^"), Number(Token(TokenType.NUMBER, 2))))
+
+    def test_invalid_operator(self, interpreter):
+        with pytest.raises(ValueError):
+            interpreter.visit_binop(BinOp(Number(Token(TokenType.NUMBER, 2)), Token(TokenType.OPERATOR, "^"), Number(Token(TokenType.NUMBER, 3))))

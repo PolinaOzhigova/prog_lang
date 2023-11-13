@@ -1,12 +1,16 @@
 from enum import Enum, auto
 
-
 class TokenType(Enum):
     NUMBER = auto()
     OPERATOR = auto()
-    EOL = auto()
     LPAREN = auto()
     RPAREN = auto()
+    BEGIN = auto()
+    END = auto()
+    SEMICOLON = auto()
+    ASSIGN = auto()
+    ID = auto()
+    DOT = auto()
 
 
 class Token:
