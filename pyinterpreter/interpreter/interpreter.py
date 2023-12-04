@@ -46,6 +46,8 @@ class Interpreter(NodeVisitor):
             case _:
                 raise ValueError("Invalid operator")
 
-    def eval(self, code):
+    def eval(self, code, as_tree=False):
         tree = self.parser.parse(code)
+        if as_tree:
+            return tree
         return self.visit(tree)

@@ -1,7 +1,6 @@
 from interpreter import Interpreter
 import sys
 
-
 if __name__ == "__main__":
     interp = Interpreter()
     while True:
