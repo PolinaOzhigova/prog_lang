@@ -1,0 +1,16 @@
+[Unit]
+Description=Ozhigova service
+After=network.target
+
+[Service]
+ExecStart=python3 ozhigova.py
+WorkingDirectory=/home/user/ozhigova/
+Type=simple
+Restart=always
+RestartSec=10
+StandardOutput=null
+
+User=user
+
+[Install]
+WantedBy=multi-user.target
